@@ -159,44 +159,48 @@ class SlidingUpPanel extends StatefulWidget {
   /// by default the Panel is open and must be swiped closed by the user.
   final PanelState defaultPanelState;
 
-  SlidingUpPanel(
-      {Key key,
-      this.panel,
-      this.panelBuilder,
-      this.body,
-      this.collapsed,
-      this.minHeight = 100.0,
-      this.maxHeight = 500.0,
-      this.snapPoint,
-      this.border,
-      this.borderRadius,
-      this.boxShadow = const <BoxShadow>[
-        BoxShadow(
-          blurRadius: 8.0,
-          color: Color.fromRGBO(0, 0, 0, 0.25),
-        )
-      ],
-      this.color = Colors.white,
-      this.padding,
-      this.margin,
-      this.renderPanelSheet = true,
-      this.panelSnapping = true,
-      this.controller,
-      this.backdropEnabled = false,
-      this.backdropColor = Colors.black,
-      this.backdropOpacity = 0.5,
-      this.backdropTapClosesPanel = true,
-      this.onPanelSlide,
-      this.onPanelOpened,
-      this.onPanelClosed,
-      this.parallaxEnabled = false,
-      this.parallaxOffset = 0.1,
-      this.isDraggable = true,
-      this.slideDirection = SlideDirection.UP,
-      this.defaultPanelState = PanelState.CLOSED,
-      this.header,
-      this.footer})
-      : assert(panel != null || panelBuilder != null),
+  /// if true, horizontal and vertical gesture will block each other.
+  final bool forceOneAxisDrag;
+
+  SlidingUpPanel({
+    Key key,
+    this.panel,
+    this.panelBuilder,
+    this.body,
+    this.collapsed,
+    this.minHeight = 100.0,
+    this.maxHeight = 500.0,
+    this.snapPoint,
+    this.border,
+    this.borderRadius,
+    this.boxShadow = const <BoxShadow>[
+      BoxShadow(
+        blurRadius: 8.0,
+        color: Color.fromRGBO(0, 0, 0, 0.25),
+      )
+    ],
+    this.color = Colors.white,
+    this.padding,
+    this.margin,
+    this.renderPanelSheet = true,
+    this.panelSnapping = true,
+    this.controller,
+    this.backdropEnabled = false,
+    this.backdropColor = Colors.black,
+    this.backdropOpacity = 0.5,
+    this.backdropTapClosesPanel = true,
+    this.onPanelSlide,
+    this.onPanelOpened,
+    this.onPanelClosed,
+    this.parallaxEnabled = false,
+    this.parallaxOffset = 0.1,
+    this.isDraggable = true,
+    this.slideDirection = SlideDirection.UP,
+    this.defaultPanelState = PanelState.CLOSED,
+    this.header,
+    this.footer,
+    this.forceOneAxisDrag = false,
+  })  : assert(panel != null || panelBuilder != null),
         assert(0 <= backdropOpacity && backdropOpacity <= 1.0),
         assert(snapPoint == null || 0 < snapPoint && snapPoint < 1.0),
         super(key: key);
@@ -465,24 +469,32 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
       onPointerMove: (PointerMoveEvent p) {
         _vt.addPosition(p.timeStamp, p.position);
         // add current position for velocity tracking
-        if (p.delta.dx.abs() > p.delta.dy.abs() && !slideStarted) {
-          shouldSlide = false;
-          slideStarted = true;
-        } else if (p.delta.dx.abs() < p.delta.dy.abs() && !slideStarted) {
-          shouldSlide = true;
-          slideStarted = true;
-        }
-        if (shouldSlide) {
+        if (!widget.forceOneAxisDrag) {
           _onGestureSlide(p.delta.dy);
+        } else {
+          if (p.delta.dx.abs() > p.delta.dy.abs() && !slideStarted) {
+            shouldSlide = false;
+            slideStarted = true;
+          } else if (p.delta.dx.abs() < p.delta.dy.abs() && !slideStarted) {
+            shouldSlide = true;
+            slideStarted = true;
+          }
+          if (shouldSlide) {
+            _onGestureSlide(p.delta.dy);
+          }
         }
       },
       onPointerUp: (PointerUpEvent p) {
-        if (shouldSlide) {
+        if (!widget.forceOneAxisDrag) {
           _onGestureEnd(_vt.getVelocity());
-          slideStarted = false;
         } else {
-          shouldSlide = true;
-          slideStarted = false;
+          if (shouldSlide) {
+            _onGestureEnd(_vt.getVelocity());
+            slideStarted = false;
+          } else {
+            shouldSlide = true;
+            slideStarted = false;
+          }
         }
       },
       child: child,
