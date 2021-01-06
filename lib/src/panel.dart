@@ -173,13 +173,8 @@ class SlidingUpPanel extends StatefulWidget {
     this.snapPoint,
     this.border,
     this.borderRadius,
-    this.boxShadow = const <BoxShadow>[
-      BoxShadow(
-        blurRadius: 8.0,
-        color: Color.fromRGBO(0, 0, 0, 0.25),
-      )
-    ],
-    this.color = Colors.white,
+    this.boxShadow,
+    this.color,
     this.padding,
     this.margin,
     this.renderPanelSheet = true,
