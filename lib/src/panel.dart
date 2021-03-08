@@ -242,7 +242,8 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
     // draggable and panel scrolling is enabled
     _sc = new ScrollController();
     _sc.addListener(() {
-      if (widget.isDraggable && !_scrollingEnabled) _sc.jumpTo(0);
+      if (widget.isDraggable && !_scrollingEnabled && _sc.offset < 0)
+        _sc.jumpTo(0);
     });
 
     widget.controller?._addState(this);
@@ -446,52 +447,57 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
   // this is because the listener is designed only for use with linking the scrolling of
   // panels and using it for panels that don't want to linked scrolling yields odd results
   Widget _gestureHandler({Widget child}) {
-    if (!widget.isDraggable) return child;
+    // if (!widget.isDraggable) return child;
 
     if (widget.panel != null) {
       return GestureDetector(
         onVerticalDragUpdate: (DragUpdateDetails dets) =>
-            _onGestureSlide(dets.delta.dy),
+            widget.isDraggable ? _onGestureSlide(dets.delta.dy) : null,
         onVerticalDragEnd: (DragEndDetails dets) =>
-            _onGestureEnd(dets.velocity),
+            widget.isDraggable ? _onGestureEnd(dets.velocity) : null,
         child: child,
       );
     }
 
     return Listener(
       onPointerDown: (PointerDownEvent p) =>
-          _vt.addPosition(p.timeStamp, p.position),
-      onPointerMove: (PointerMoveEvent p) {
-        _vt.addPosition(p.timeStamp, p.position);
-        // add current position for velocity tracking
-        if (!widget.forceOneAxisDrag) {
-          _onGestureSlide(p.delta.dy);
-        } else {
-          if (p.delta.dx.abs() > p.delta.dy.abs() && !slideStarted) {
-            shouldSlide = false;
-            slideStarted = true;
-          } else if (p.delta.dx.abs() < p.delta.dy.abs() && !slideStarted) {
-            shouldSlide = true;
-            slideStarted = true;
-          }
-          if (shouldSlide) {
-            _onGestureSlide(p.delta.dy);
-          }
-        }
-      },
-      onPointerUp: (PointerUpEvent p) {
-        if (!widget.forceOneAxisDrag) {
-          _onGestureEnd(_vt.getVelocity());
-        } else {
-          if (shouldSlide) {
-            _onGestureEnd(_vt.getVelocity());
-            slideStarted = false;
-          } else {
-            shouldSlide = true;
-            slideStarted = false;
-          }
-        }
-      },
+          widget.isDraggable ? _vt.addPosition(p.timeStamp, p.position) : null,
+      onPointerMove: widget.isDraggable
+          ? (PointerMoveEvent p) {
+              _vt.addPosition(p.timeStamp, p.position);
+              // add current position for velocity tracking
+              if (!widget.forceOneAxisDrag) {
+                _onGestureSlide(p.delta.dy);
+              } else {
+                if (p.delta.dx.abs() > p.delta.dy.abs() && !slideStarted) {
+                  shouldSlide = false;
+                  slideStarted = true;
+                } else if (p.delta.dx.abs() < p.delta.dy.abs() &&
+                    !slideStarted) {
+                  shouldSlide = true;
+                  slideStarted = true;
+                }
+                if (shouldSlide) {
+                  _onGestureSlide(p.delta.dy);
+                }
+              }
+            }
+          : null,
+      onPointerUp: widget.isDraggable
+          ? (PointerUpEvent p) {
+              if (!widget.forceOneAxisDrag) {
+                _onGestureEnd(_vt.getVelocity());
+              } else {
+                if (shouldSlide) {
+                  _onGestureEnd(_vt.getVelocity());
+                  slideStarted = false;
+                } else {
+                  shouldSlide = true;
+                  slideStarted = false;
+                }
+              }
+            }
+          : null,
       child: child,
     );
   }
