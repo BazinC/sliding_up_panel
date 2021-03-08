@@ -239,11 +239,13 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
       });
 
     // prevent the panel content from being scrolled only if the widget is
-    // draggable and panel scrolling is enabled
+    // draggable and panel scrolling is enabled.
+    // Also allow scroll when offset is positive and panel is open (allow scaffold resizeToAvoidBottomInset)
     _sc = new ScrollController();
     _sc.addListener(() {
-      if (widget.isDraggable && !_scrollingEnabled && _sc.offset < 0)
-        _sc.jumpTo(0);
+      if (widget.isDraggable &&
+          !_scrollingEnabled &&
+          (_sc.offset < 0 || !_isPanelOpen)) _sc.jumpTo(0);
     });
 
     widget.controller?._addState(this);
