@@ -209,7 +209,7 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
   AnimationController _ac;
 
   ScrollController _sc;
-  bool _scrollingEnabled = false;
+  bool _scrollingEnabled = true;
   VelocityTracker _vt = new VelocityTracker();
 
   bool _isPanelVisible = true;
