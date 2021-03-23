@@ -615,12 +615,18 @@ class _SlidingUpPanelState extends State<SlidingUpPanel>
 
   //close the panel
   Future<void> _close() {
-    return _ac.fling(velocity: -1.0);
+    if (_ac.value != 0.0) {
+      return _ac.fling(velocity: -1.0);
+    }
+    return Future.value();
   }
 
   //open the panel
   Future<void> _open() {
-    return _ac.fling(velocity: 1.0);
+    if (_ac.value != 1.0) {
+      return _ac.fling(velocity: 1.0);
+    }
+    return Future.value();
   }
 
   //hide the panel (completely offscreen)
